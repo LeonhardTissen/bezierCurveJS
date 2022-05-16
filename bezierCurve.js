@@ -1,10 +1,9 @@
-// init
 const bc = document.createElement('div')
 bc.style.position = 'absolute';
 bc.style.left = 0;
 bc.style.top = 0;
-bc.style.width = "100vw";
-bc.style.height = "100vh";
+bc.style.width = window.innerWidth;
+bc.style.height = window.innerHeight;
 let points = [];
 let handle_points = [];
 let closing_point;
@@ -51,18 +50,19 @@ bc.onmousemove = function() {
 	const x = event.clientX;
 	const y = event.clientY;
 	const l = points.length - 1;
+	about_to_reconnect = false;
 	if (!ready_for_next_bezier) {
 		if (current_handle !== undefined) {
 			const handle = document.getElementById('handle' + current_handle);
 			const line = document.querySelector('.line' + current_handle);
-			points[current_handle][4] = x;
-			points[current_handle][5] = y;
-			handle_points[current_handle][0] = x;
-			handle_points[current_handle][1] = y;
-			handle.setAttribute("cx", x)
-			handle.setAttribute("cy", y)
 			const xa = points[current_handle][0] - (x - points[current_handle][0])
 			const ya = points[current_handle][1] - (y - points[current_handle][1])
+			handle_points[current_handle][0] = x;
+			handle_points[current_handle][1] = y;
+			points[current_handle][4] = x;
+			points[current_handle][5] = y;
+			handle.setAttribute("cx", x)
+			handle.setAttribute("cy", y)
 			try {
 				line.setAttribute("x1", xa)
 				line.setAttribute("y1", ya)
@@ -72,9 +72,7 @@ bc.onmousemove = function() {
 		} else {
 			return;
 		}
-	}
-	about_to_reconnect = false;
-	if (event.buttons === 0 && closing_point && checkIfTouch(closing_point[0], x, closing_point[1], y)) {
+	} else if (event.buttons === 0 && closing_point && checkIfTouch(closing_point[0], x, closing_point[1], y)) {
 		about_to_reconnect = true;
 	} else if (event.buttons !== 0) {
 		const currentLine = document.getElementById('currentLine')
@@ -96,20 +94,16 @@ bc.onmousemove = function() {
 		var newpath = `m ${points[0][0]},${points[0][1]}`
 		for (var p = 0; p < points.length; p ++) {
 			const pt = points[p]
-			if (p == 0) {
-				newpath += ` C ${pt[2]} ${pt[3]}, ${pt[2]} ${pt[3]}, ${pt[0]} ${pt[1]}`
-			} else {
+			if (p > 0) {
 				const prevpt = points[p-1]
 				newpath += ` C ${prevpt[4]} ${prevpt[5]}, ${pt[2]} ${pt[3]}, ${pt[0]} ${pt[1]}`
 			}
 		}
-		if (points.length > 0) {
-			const prevpt = points[p-1]
-			if (about_to_reconnect || !active_bezier) {
-				newpath += ` C ${prevpt[4]} ${prevpt[5]}, ${points[0][2]} ${points[0][3]}, ${closing_point[0]} ${closing_point[1]}`
-			} else {
-				newpath += ` C ${prevpt[4]} ${prevpt[5]}, ${x} ${y}, ${x} ${y}`
-			}
+		const lastpt = points[points.length-1]
+		if (about_to_reconnect || !active_bezier) {
+			newpath += ` C ${lastpt[4]} ${lastpt[5]}, ${points[0][2]} ${points[0][3]}, ${closing_point[0]} ${closing_point[1]}`
+		} else {
+			newpath += ` C ${lastpt[4]} ${lastpt[5]}, ${x} ${y}, ${x} ${y}`
 		}
 		svgpath.setAttribute('d',newpath)
 	}
