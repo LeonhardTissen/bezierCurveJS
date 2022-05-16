@@ -55,7 +55,6 @@ bc.onmousemove = function() {
 		if (current_handle !== undefined) {
 			const handle = document.getElementById('handle' + current_handle);
 			const line = document.querySelector('.line' + current_handle);
-			console.log(current_handle)
 			points[current_handle][4] = x;
 			points[current_handle][5] = y;
 			handle_points[current_handle][0] = x;
@@ -70,7 +69,6 @@ bc.onmousemove = function() {
 				line.setAttribute("x2", x)
 				line.setAttribute("y2", y)
 			} catch (err) {}
-			console.log(points)
 		} else {
 			return;
 		}
