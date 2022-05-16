@@ -1,2 +1,2 @@
 # bezierCurveJS
-A beziel curve tool
+A simple implementation of a bezier curve tool
