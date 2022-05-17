@@ -1,9 +1,11 @@
-function bezierCurveInit(destination_element = document.body) {
+function bezierCurveInit(destination_element = document.body, color = 'black') {
 	// remove old container if it exists
 	try {
 		bc.container.remove()
 	} catch (err) {}
 	bc = {};
+	// set color of everything
+	bc.color = color;
 	bc.container = document.createElement('div');
 	// width and height of the destination element
 	let width;
@@ -17,8 +19,8 @@ function bezierCurveInit(destination_element = document.body) {
 		height = boundingbox.height;
 	}
 	destination_element.appendChild(bc.container)
-	bc.container.innerHTML = `<svg viewBox="0 0 ${width} ${height}" id='svgcontainer'>
-	<path id="svgpath" style="stroke:#000;fill:none;">
+	bc.container.innerHTML = `<svg viewBox="0 0 ${width} ${height}" id="svgcontainer">
+	<path id="svgpath" style="stroke:${bc.color};fill:none;">
 	</svg>`
 	bc.svg = document.getElementById('svgcontainer')
 	// container size and position
@@ -36,9 +38,9 @@ function bezierCurveInit(destination_element = document.body) {
 	bc.container.onmouseup = bcMouseUp;
 	bc.container.onmousemove = bcMouseMove;
 }
-bezierCurveInit();
+bezierCurveInit(document.body, 'red');
 document.body.onresize = function() {
-	bezierCurveInit(document.body)
+	bezierCurveInit(document.body, 'red')
 }
 function bcMouseDown() {
 	if (!bc.ready_for_next_bezier) {
@@ -123,10 +125,10 @@ function bcMouseMove() {
 		currentLine.setAttribute("x2", bc.x)
 		currentLine.setAttribute("y2", bc.y)
 	}
-	generatePath(bc.x, bc.y)
+	generatePath()
 }
 
-function generatePath(cursor_x, cursor_y) {
+function generatePath() {
 	// if there are no points, don't start rendering
 	if (bc.p.length == 0) return
 	// rendering the path, if there is one
@@ -148,7 +150,7 @@ function generatePath(cursor_x, cursor_y) {
 	if (bc.about_to_reconnect || !bc.active_bezier) {
 		appendCurve(lastpt[4], lastpt[5], fpt[2], fpt[3], bc.closing_point[0], bc.closing_point[1])
 	} else {
-		appendCurve(lastpt[4], lastpt[5], cursor_x, cursor_y, cursor_x, cursor_y)
+		appendCurve(lastpt[4], lastpt[5], bc.x, bc.y, bc.x, bc.y)
 	}
 	// set the generated path on the element
 	svgpath.setAttribute('d',bc.newpath)
@@ -174,24 +176,24 @@ function bcMouseUp() {
 
 // add a tiny circle as a point
 function addPoint(x,y) {
-	bc.svg.innerHTML += `<circle cx="${x}" cy="${y}" r="2" fill="black"/>`
+	bc.svg.innerHTML += `<circle cx="${x}" cy="${y}" r="2" fill="${bc.color}"/>`
 }
 
 // add a handle line
 function addLine(x,y) {
-	bc.svg.innerHTML += `<line class="line${bc.p.length-1}" x1="${x}" y1="${y}" x2="${x}" y2="${y}" stroke="black" id="currentLine"/>`
+	bc.svg.innerHTML += `<line class="line${bc.p.length-1}" x1="${x}" y1="${y}" x2="${x}" y2="${y}" stroke="${bc.color}" id="currentLine"/>`
 }
 
 // add circle for the closing point
 function addClosingPoint(x,y) {
 	bc.closing_point = [x,y]
-	bc.svg.innerHTML += `<circle cx="${x}" cy="${y}" r="8" fill="none" stroke="black"/>`
+	bc.svg.innerHTML += `<circle cx="${x}" cy="${y}" r="8" fill="none" stroke="${bc.color}"/>`
 }
 
 // add circle for a handle point
 function addHandlePoint(x,y) {
 	bc.handle_points.push([x,y]);
-	bc.svg.innerHTML += `<circle id="handle${bc.p.length-1}" cx="${x}" cy="${y}" r="8" fill="none" stroke="black"/>`
+	bc.svg.innerHTML += `<circle id="handle${bc.p.length-1}" cx="${x}" cy="${y}" r="8" fill="none" stroke="${bc.color}"/>`
 }
 
 // check if two coordinates are close enough and return true or false accordingly
