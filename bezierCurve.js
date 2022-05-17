@@ -1,12 +1,23 @@
-let bc = {};
 function bezierCurveInit(destination_element = document.body) {
+	bc = {};
 	// remove old container if it exists
 	if (bc.container) {
 		bc.container.remove()
 	}
 	bc.container = document.createElement('div');
+	// width and height of the destination element
+	let width;
+	let height;
+	if (destination_element === document.body) {
+		width = window.innerWidth;
+		height = window.innerHeight;
+	} else {
+		const boundingbox = destination_element.getBoundingClientRect();
+		width = destination_element.width;
+		height = destination_element.height;
+	}
 	destination_element.appendChild(bc.container)
-	bc.container.innerHTML = `<svg viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" id='svgcontainer'>
+	bc.container.innerHTML = `<svg viewBox="0 0 ${width} ${height}" id='svgcontainer'>
 	<path id="svgpath" style="stroke:#000;fill:none;">
 	</svg>`
 	bc.svg = document.getElementById('svgcontainer')
@@ -14,10 +25,10 @@ function bezierCurveInit(destination_element = document.body) {
 	bc.container.position = 'absolute';
 	bc.container.left = 0;
 	bc.container.top = 0;
-	bc.container.width = window.innerWidth;
-	bc.container.height = window.innerHeight;
+	bc.container.width = "100%";
+	bc.container.height = "100%";
 	// all of the variables
-	bc.points = [];
+	bc.p = [];
 	bc.handle_points = [];
 	bc.ready_for_next_bezier = true;
 	// add all of the events
@@ -47,20 +58,21 @@ function bcMouseDown() {
 		return;
 	}
 	// otherwise create a new point
-	if (bc.points.length === 0) {
+	if (bc.p.length === 0) {
 		bc.active_bezier = true;
 		addClosingPoint(bc.x,bc.y);
 	}
 	// Add points and handle line
-	bc.points.push([bc.x,bc.y,bc.x,bc.y,bc.x,bc.y])
+	bc.p.push([bc.x,bc.y,bc.x,bc.y,bc.x,bc.y])
 	addPoint(bc.x,bc.y)
 	addLine(bc.x,bc.y)
 }
 
 function bcMouseMove() {
-	bc.x = event.clientX;
-	bc.y = event.clientY;
-	const l = bc.points.length - 1;
+	// change the mouse values
+	bc.x = event.pageX - event.currentTarget.offsetLeft;
+	bc.y = event.pageY - event.currentTarget.offsetTop;
+	const l = bc.p.length - 1;
 	bc.about_to_reconnect = false;
 	if (!bc.ready_for_next_bezier) {
 		// if not moving a handle, don't do anything
@@ -70,16 +82,16 @@ function bcMouseMove() {
 		const line = document.querySelector('.line' + bc.current_handle);
 		const ch = bc.current_handle
 		// the other side of the handle
-		const x_alternate = bc.points[ch][0] - (bc.x - bc.points[ch][0])
-		const y_alternate = bc.points[ch][1] - (bc.y - bc.points[ch][1])
+		const x_alternate = bc.p[ch][0] - (bc.x - bc.p[ch][0])
+		const y_alternate = bc.p[ch][1] - (bc.y - bc.p[ch][1])
 		// set the handle points to the one of the mouse
 		bc.handle_points[ch][0] = bc.x;
 		bc.handle_points[ch][1] = bc.y;
 		// change the points also
-		bc.points[ch][2] = x_alternate;
-		bc.points[ch][3] = y_alternate;
-		bc.points[ch][4] = bc.x;
-		bc.points[ch][5] = bc.y;
+		bc.p[ch][2] = x_alternate;
+		bc.p[ch][3] = y_alternate;
+		bc.p[ch][4] = bc.x;
+		bc.p[ch][5] = bc.y;
 		// change the attributes of the handle element
 		handle.setAttribute("cx", bc.x)
 		handle.setAttribute("cy", bc.y)
@@ -96,13 +108,13 @@ function bcMouseMove() {
 		// get the current line element
 		const currentLine = document.getElementById('currentLine')
 		// get the position of the other side of the line
-		const x_alternate = bc.points[l][0] - (bc.x - bc.points[l][0])
-		const y_alternate = bc.points[l][1] - (bc.y - bc.points[l][1])
+		const x_alternate = bc.p[l][0] - (bc.x - bc.p[l][0])
+		const y_alternate = bc.p[l][1] - (bc.y - bc.p[l][1])
 		// set the points accordingly
-		bc.points[l][2] = x_alternate;
-		bc.points[l][3] = y_alternate;
-		bc.points[l][4] = bc.x;
-		bc.points[l][5] = bc.y;
+		bc.p[l][2] = x_alternate;
+		bc.p[l][3] = y_alternate;
+		bc.p[l][4] = bc.x;
+		bc.p[l][5] = bc.y;
 		// change the attributes of the line element
 		currentLine.setAttribute("x1", x_alternate)
 		currentLine.setAttribute("y1", y_alternate)
@@ -114,23 +126,22 @@ function bcMouseMove() {
 
 function generatePath(cursor_x, cursor_y) {
 	// if there are no points, don't start rendering
-	if (bc.points.length == 0) return
-
+	if (bc.p.length == 0) return
 	// rendering the path, if there is one
 	// get the path element
 	const svgpath = document.getElementById('svgpath');
 	// start with m which is move to the first point without drawing
-	const fpt = bc.points[0];
+	const fpt = bc.p[0];
 	bc.newpath = `m ${fpt[0]},${fpt[1]}`
 	// loop through all the points
-	for (var p = 1; p < bc.points.length; p ++) {
+	for (var p = 1; p < bc.p.length; p ++) {
 		// get the previous and current point needed for the curve
-		const pt = bc.points[p];
-		const prevpt = bc.points[p-1];
+		const pt = bc.p[p];
+		const prevpt = bc.p[p-1];
 		// add the curve to the path
 		appendCurve(prevpt[4], prevpt[5], pt[2], pt[3], pt[0], pt[1])
 	}
-	const lastpt = bc.points[bc.points.length-1]
+	const lastpt = bc.p[bc.p.length-1]
 	// whether to connect it up to the start or keep going towards the cursor
 	if (bc.about_to_reconnect || !bc.active_bezier) {
 		appendCurve(lastpt[4], lastpt[5], fpt[2], fpt[3], bc.closing_point[0], bc.closing_point[1])
@@ -141,6 +152,7 @@ function generatePath(cursor_x, cursor_y) {
 	svgpath.setAttribute('d',bc.newpath)
 }
 
+// adds a bezier curve to the svg path
 function appendCurve(x1,y1,x2,y2,x3,y3) {
 	bc.newpath += ` C ${x1} ${y1}, ${x2} ${y2}, ${x3} ${y3}`
 }
@@ -165,7 +177,7 @@ function addPoint(x,y) {
 
 // add a handle line
 function addLine(x,y) {
-	bc.svg.innerHTML += `<line class="line${bc.points.length-1}" x1="${x}" y1="${y}" x2="${x}" y2="${y}" stroke="black" id="currentLine"/>`
+	bc.svg.innerHTML += `<line class="line${bc.p.length-1}" x1="${x}" y1="${y}" x2="${x}" y2="${y}" stroke="black" id="currentLine"/>`
 }
 
 // add circle for the closing point
@@ -177,7 +189,7 @@ function addClosingPoint(x,y) {
 // add circle for a handle point
 function addHandlePoint(x,y) {
 	bc.handle_points.push([x,y]);
-	bc.svg.innerHTML += `<circle id="handle${bc.points.length-1}" cx="${x}" cy="${y}" r="8" fill="none" stroke="black"/>`
+	bc.svg.innerHTML += `<circle id="handle${bc.p.length-1}" cx="${x}" cy="${y}" r="8" fill="none" stroke="black"/>`
 }
 
 // check if two coordinates are close enough and return true or false accordingly
