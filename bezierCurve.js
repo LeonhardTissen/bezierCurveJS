@@ -38,10 +38,6 @@ function bezierCurveInit(destination_element = document.body, color = 'black') {
 	bc.container.onmouseup = bcMouseUp;
 	bc.container.onmousemove = bcMouseMove;
 }
-bezierCurveInit(document.body, 'red');
-document.body.onresize = function() {
-	bezierCurveInit(document.body, 'red')
-}
 function bcMouseDown() {
 	if (!bc.ready_for_next_bezier) {
 		// first check if cursor is hovering over a handle

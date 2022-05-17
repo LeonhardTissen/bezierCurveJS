@@ -5,7 +5,13 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Bezier Curve</title>
 </head>
-<body style="overflow:hidden;margin:0;background-color:black">
+<body style="overflow:hidden;margin:0px;">
 	<script type="text/javascript" src="bezierCurve.js"></script>
+	<script type="text/javascript">
+		bezierCurveInit(document.body, 'black');
+		document.body.onresize = function() {
+			bezierCurveInit(document.body, 'black')
+		}
+	</script>
 </body>
 </html>
