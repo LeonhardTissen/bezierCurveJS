@@ -1,9 +1,9 @@
 function bezierCurveInit(destination_element = document.body) {
-	bc = {};
 	// remove old container if it exists
-	if (bc.container) {
+	try {
 		bc.container.remove()
-	}
+	} catch (err) {}
+	bc = {};
 	bc.container = document.createElement('div');
 	// width and height of the destination element
 	let width;
@@ -13,8 +13,8 @@ function bezierCurveInit(destination_element = document.body) {
 		height = window.innerHeight;
 	} else {
 		const boundingbox = destination_element.getBoundingClientRect();
-		width = destination_element.width;
-		height = destination_element.height;
+		width = boundingbox.width;
+		height = boundingbox.height;
 	}
 	destination_element.appendChild(bc.container)
 	bc.container.innerHTML = `<svg viewBox="0 0 ${width} ${height}" id='svgcontainer'>
@@ -37,7 +37,9 @@ function bezierCurveInit(destination_element = document.body) {
 	bc.container.onmousemove = bcMouseMove;
 }
 bezierCurveInit();
-
+document.body.onresize = function() {
+	bezierCurveInit(document.body)
+}
 function bcMouseDown() {
 	if (!bc.ready_for_next_bezier) {
 		// first check if cursor is hovering over a handle
