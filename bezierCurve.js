@@ -59,6 +59,8 @@ bc.onmousemove = function() {
 			const ya = points[current_handle][1] - (y - points[current_handle][1])
 			handle_points[current_handle][0] = x;
 			handle_points[current_handle][1] = y;
+			points[current_handle][2] = xa;
+			points[current_handle][3] = ya;
 			points[current_handle][4] = x;
 			points[current_handle][5] = y;
 			handle.setAttribute("cx", x)
