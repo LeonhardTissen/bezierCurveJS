@@ -78,6 +78,9 @@ function bcMouseDown() {
 }
 
 function bcMouseUp() {
+	if (event.type === "touchend") {
+		event.preventDefault();
+	}
 	// remove contact from any handle
 	bc.current_handle = undefined;
 
