@@ -44,6 +44,7 @@ function bezierCurveInit(destination_element = document.body, color = 'black') {
 function bcMouseDown() {
 	// mobile handler
 	if (event.type === "touchstart") {
+		event.preventDefault();
 		bc.x = event.touches[0].clientX;
 		bc.y = event.touches[0].clientY;
 	}
@@ -94,6 +95,7 @@ function bcMouseMove() {
 		bc.held = true;
 		bc.x = event.touches[0].clientX;
 		bc.y = event.touches[0].clientY;
+		event.preventDefault();
 	} else {
 		bc.held = (event.buttons !== 0);
 		// change the mouse values
