@@ -37,8 +37,16 @@ function bezierCurveInit(destination_element = document.body, color = 'black') {
 	bc.container.onmousedown = bcMouseDown;
 	bc.container.onmouseup = bcMouseUp;
 	bc.container.onmousemove = bcMouseMove;
+	bc.container.ontouchstart = bcMouseDown;
+	bc.container.ontouchend = bcMouseUp;
+	bc.container.ontouchmove = bcMouseMove;
 }
 function bcMouseDown() {
+	// mobile handler
+	if (event.type === "touchstart") {
+		bc.x = event.touches[0].clientX;
+		bc.y = event.touches[0].clientY;
+	}
 	if (!bc.ready_for_next_bezier) {
 		// first check if cursor is hovering over a handle
 		for (let handle = 0; handle < bc.handle_points.length; handle ++) {
@@ -68,10 +76,30 @@ function bcMouseDown() {
 	addLine(bc.x,bc.y)
 }
 
+function bcMouseUp() {
+	// remove contact from any handle
+	bc.current_handle = undefined;
+
+	const currentLine = document.getElementById('currentLine')
+	if (currentLine == undefined) return
+	// remove the currentLine id
+	currentLine.removeAttribute('id');
+
+	// create a handle at newly created line
+	addHandlePoint(bc.x, bc.y)
+}
+
 function bcMouseMove() {
-	// change the mouse values
-	bc.x = event.pageX - event.currentTarget.offsetLeft;
-	bc.y = event.pageY - event.currentTarget.offsetTop;
+	if (event.type === "touchmove") {
+		bc.held = true;
+		bc.x = event.touches[0].clientX;
+		bc.y = event.touches[0].clientY;
+	} else {
+		bc.held = (event.buttons !== 0);
+		// change the mouse values
+		bc.x = event.pageX - event.currentTarget.offsetLeft;
+		bc.y = event.pageY - event.currentTarget.offsetTop;
+	}
 	const l = bc.p.length - 1;
 	bc.about_to_reconnect = false;
 	if (!bc.ready_for_next_bezier) {
@@ -100,10 +128,10 @@ function bcMouseMove() {
 		line.setAttribute("y1", y_alternate)
 		line.setAttribute("x2", bc.x)
 		line.setAttribute("y2", bc.y)
-	} else if (event.buttons === 0 && bc.closing_point && checkIfTouch(bc.closing_point[0], bc.x, bc.closing_point[1], bc.y)) {
+	} else if (!bc.held && bc.closing_point && checkIfTouch(bc.closing_point[0], bc.x, bc.closing_point[1], bc.y)) {
 		// when the mouse is hovering over the closing point, make it ready for a connect
 		bc.about_to_reconnect = true;
-	} else if (event.buttons !== 0) {
+	} else if (bc.held) {
 		// this is when you're dragging a new line
 		// get the current line element
 		const currentLine = document.getElementById('currentLine')
@@ -155,19 +183,6 @@ function generatePath() {
 // adds a bezier curve to the svg path
 function appendCurve(x1,y1,x2,y2,x3,y3) {
 	bc.newpath += ` C ${x1} ${y1}, ${x2} ${y2}, ${x3} ${y3}`
-}
-
-function bcMouseUp() {
-	// remove contact from any handle
-	bc.current_handle = undefined;
-
-	const currentLine = document.getElementById('currentLine')
-	if (currentLine == undefined) return
-	// remove the currentLine id
-	currentLine.removeAttribute('id');
-
-	// create a handle at newly created line
-	addHandlePoint(bc.x, bc.y)
 }
 
 // add a tiny circle as a point
