@@ -37,17 +37,9 @@ function bezierCurveInit(destination_element = document.body, color = 'black') {
 	bc.container.onmousedown = bcMouseDown;
 	bc.container.onmouseup = bcMouseUp;
 	bc.container.onmousemove = bcMouseMove;
-	bc.container.ontouchstart = bcMouseDown;
-	bc.container.ontouchend = bcMouseUp;
-	bc.container.ontouchmove = bcMouseMove;
 }
 function bcMouseDown() {
-	// mobile handler
-	if (event.type === "touchstart") {
-		event.preventDefault();
-		bc.x = event.touches[0].clientX;
-		bc.y = event.touches[0].clientY;
-	}
+	bc.held = true;
 	if (!bc.ready_for_next_bezier) {
 		// first check if cursor is hovering over a handle
 		for (let handle = 0; handle < bc.handle_points.length; handle ++) {
@@ -78,9 +70,7 @@ function bcMouseDown() {
 }
 
 function bcMouseUp() {
-	if (event.type === "touchend") {
-		event.preventDefault();
-	}
+	bc.held = false;
 	// remove contact from any handle
 	bc.current_handle = undefined;
 
@@ -94,17 +84,9 @@ function bcMouseUp() {
 }
 
 function bcMouseMove() {
-	if (event.type === "touchmove") {
-		bc.held = true;
-		bc.x = event.touches[0].clientX;
-		bc.y = event.touches[0].clientY;
-		event.preventDefault();
-	} else {
-		bc.held = (event.buttons !== 0);
-		// change the mouse values
-		bc.x = event.pageX - event.currentTarget.offsetLeft;
-		bc.y = event.pageY - event.currentTarget.offsetTop;
-	}
+	// change the mouse values
+	bc.x = event.pageX - event.currentTarget.offsetLeft;
+	bc.y = event.pageY - event.currentTarget.offsetTop;
 	const l = bc.p.length - 1;
 	bc.about_to_reconnect = false;
 	if (!bc.ready_for_next_bezier) {
